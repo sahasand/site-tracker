@@ -2,6 +2,43 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm
+- Supabase account (for database)
+
+### Local Setup
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
+
+# 3. Set up database
+# Run the migration in supabase/migrations/001_initial_schema.sql
+# via Supabase dashboard SQL editor
+
+# 4. Start development server
+npm run dev
+
+# 5. Open http://localhost:3000
+```
+
+### Environment Variables
+
+Create `.env.local` with:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+Get these from: Supabase Dashboard → Project Settings → API
+
 ## Build & Development Commands
 
 ```bash
@@ -46,13 +83,6 @@ When a site is created, a trigger auto-generates all 8 milestone records. The `u
 Site status progression: `planned` → `activating` (any milestone starts) → `active` (site_activated completes)
 
 8 milestone types in order: regulatory_submitted, regulatory_approved, contract_sent, contract_executed, siv_scheduled, siv_completed, edc_training_complete, site_activated
-
-## Environment Variables
-
-```
-NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-```
 
 ## Current Features
 
