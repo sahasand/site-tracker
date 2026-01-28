@@ -66,8 +66,7 @@ This is a clinical trial site tracking dashboard built with Next.js 14 App Route
 - `src/lib/supabase/` - Client factories (server.ts for RSC, client.ts for browser)
 - `src/types/` - Domain types and constants (Study, Site, Milestone enums)
 - `src/components/ui/` - Shadcn primitives
-- `src/components/activation/` - Kanban board with drag-and-drop
-- `src/components/performance/` - Performance dashboard components
+- `src/components/activation/` - Kanban board with drag-and-drop (single DndContext pattern)
 - `src/components/studies/` - Study cards, charts, dialogs
 - `src/components/sites/` - Site table, dialogs, CSV import
 - `supabase/migrations/` - SQL schema with triggers
@@ -94,15 +93,14 @@ Site status progression: `planned` → `activating` (any milestone starts) → `
 ### Activation Pipeline (`/activation`)
 - Kanban board with 5 stages: Regulatory, Contracts, SIV, EDC, Activated
 - **Drag-and-drop** sites between columns (@dnd-kit/core)
-- Confirmation dialog before auto-completing milestones on drag
+  - Single DndContext at parent level (supports multiple studies)
+  - Forward drag: auto-completes milestones
+  - **Backward drag**: resets milestones to pending
+  - Droppable IDs use `studyId:stage` format for uniqueness
+- Confirmation dialog before completing/resetting milestones on drag
 - Bulk milestone update mode (select multiple sites)
 - Bottleneck alerts for sites stuck >14 days
 - Export CSV button
-
-### Performance Dashboard (`/performance`)
-- Site performance metrics table with tier badges
-- Filter by study
-- Color-coded tiers: High (80+), Medium (60-79), Low (<60)
 
 ### Study Detail Page (`/studies/[id]`)
 - Stats cards: Total Sites, Active, Activating, Enrollment
