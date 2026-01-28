@@ -116,6 +116,7 @@ export async function getAllSitesWithMilestones(): Promise<Array<Site & { milest
       *,
       milestones:site_activation_milestones(*)
     `)
+    .order('study_id', { ascending: true })
     .order('site_number', { ascending: true })
 
   if (error) throw error

@@ -154,7 +154,7 @@ export default function SiteCard({
       {...attributes}
       {...listeners}
       className={`bg-white rounded-lg border-l-[3px] ${accentClass} shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing card-hover group ${
-        isDragging ? 'opacity-50' : ''
+        isDragging ? 'opacity-40 ring-2 ring-dashed ring-slate-300 scale-[0.98]' : ''
       }`}
     >
       <Link href={`/sites/${site.id}`} onClick={(e) => {

@@ -223,4 +223,39 @@
   .animate-pulse-subtle {
     animation: pulse-subtle 2s ease-in-out infinite;
   }
+
+  /* Drag overlay styles */
+  .drag-overlay-card {
+    @apply cursor-grabbing;
+    transform: scale(1.03);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.05),
+      0 10px 20px rgb(0 0 0 / 0.12),
+      0 3px 6px rgb(0 0 0 / 0.08);
+    border-radius: 0.5rem;
+    animation: drag-lift 0.12s ease-out forwards;
+    will-change: transform, box-shadow;
+    pointer-events: none;
+  }
+
+  @keyframes drag-lift {
+    from {
+      transform: scale(1);
+      box-shadow:
+        0 0 0 1px rgb(0 0 0 / 0.05),
+        0 1px 3px rgb(0 0 0 / 0.1);
+    }
+    to {
+      transform: scale(1.03);
+      box-shadow:
+        0 0 0 1px rgb(0 0 0 / 0.05),
+        0 10px 20px rgb(0 0 0 / 0.12),
+        0 3px 6px rgb(0 0 0 / 0.08);
+    }
+  }
+
+  /* Dragging source placeholder */
+  .dragging-source {
+    @apply opacity-40 ring-2 ring-dashed ring-slate-300 bg-slate-100;
+  }
 }

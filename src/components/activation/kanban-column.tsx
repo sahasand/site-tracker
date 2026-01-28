@@ -3,10 +3,9 @@
 import { useDroppable } from '@dnd-kit/core'
 import SiteCard from './site-card'
 import type { Site, SiteActivationMilestone } from '@/types'
-import type { KanbanStage } from './kanban-board'
 
 interface KanbanColumnProps {
-  stageId: KanbanStage
+  droppableId: string
   title: string
   subtitle: string
   sites: Array<Site & { milestones: SiteActivationMilestone[] }>
@@ -16,6 +15,7 @@ interface KanbanColumnProps {
   selectedSiteIds?: Set<string>
   onToggleSelection?: (siteId: string) => void
   isDragging?: boolean
+  isOverColumn?: boolean
 }
 
 const colorClasses: Record<string, { dot: string; header: string; count: string; dropzone: string }> = {
@@ -52,7 +52,7 @@ const colorClasses: Record<string, { dot: string; header: string; count: string;
 }
 
 export default function KanbanColumn({
-  stageId,
+  droppableId,
   title,
   subtitle,
   sites,
@@ -62,18 +62,20 @@ export default function KanbanColumn({
   selectedSiteIds = new Set(),
   onToggleSelection,
   isDragging = false,
+  isOverColumn = false,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
-    id: stageId,
+    id: droppableId,
   })
 
   const colors = colorClasses[color] || colorClasses.blue
+  const showDropIndicator = isDragging && (isOver || isOverColumn)
 
   return (
     <div
       ref={setNodeRef}
       className={`kanban-column flex flex-col transition-all duration-200 ${
-        isDragging && isOver ? `border-2 border-dashed ${colors.dropzone} rounded-lg` : ''
+        showDropIndicator ? `border-2 border-dashed ${colors.dropzone} rounded-lg scale-[1.02]` : ''
       }`}
     >
       <div className="flex items-start justify-between mb-4">
@@ -107,15 +109,17 @@ export default function KanbanColumn({
         ))}
         {sites.length === 0 && (
           <div className={`flex flex-col items-center justify-center py-8 px-4 transition-all duration-200 ${
-            isDragging ? 'border-2 border-dashed rounded-lg ' + colors.dropzone : ''
+            showDropIndicator ? 'border-2 border-dashed rounded-lg ' + colors.dropzone : ''
           }`}>
-            <div className={`w-8 h-8 rounded-full ${colors.count} flex items-center justify-center mb-2`}>
+            <div className={`w-8 h-8 rounded-full ${colors.count} flex items-center justify-center mb-2 transition-transform ${
+              showDropIndicator ? 'scale-110' : ''
+            }`}>
               {isLast ? (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-              ) : isDragging ? (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              ) : showDropIndicator ? (
+                <svg className="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
                 </svg>
               ) : (
@@ -124,8 +128,8 @@ export default function KanbanColumn({
                 </svg>
               )}
             </div>
-            <p className="text-xs text-slate-400 text-center">
-              {isDragging ? 'Drop here' : isLast ? 'Ready for sites' : 'No sites yet'}
+            <p className={`text-xs text-center transition-colors ${showDropIndicator ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
+              {showDropIndicator ? 'Drop here' : isLast ? 'Ready for sites' : 'No sites yet'}
             </p>
           </div>
         )}
