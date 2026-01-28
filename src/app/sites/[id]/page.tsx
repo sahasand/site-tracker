@@ -5,6 +5,7 @@ import { getStudy } from '@/lib/queries/studies'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import MilestoneTracker from '@/components/milestones/milestone-tracker'
+import EditSiteDialog from '@/components/sites/edit-site-dialog'
 
 interface SiteDetailPageProps {
   params: Promise<{ id: string }>
@@ -56,6 +57,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
           </div>
           <p className="text-gray-500">{site.name}</p>
         </div>
+        <EditSiteDialog site={site} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">

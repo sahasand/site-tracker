@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { SiteActivationMilestone, UpdateMilestoneInput, SiteStatus } from '@/types'
+import type { SiteActivationMilestone, UpdateMilestoneInput, SiteStatus, MilestoneType, MilestoneStatus } from '@/types'
 
 export async function getMilestonesBySite(siteId: string): Promise<SiteActivationMilestone[]> {
   const supabase = await createClient()
@@ -75,4 +75,34 @@ export async function updateMilestoneAndSiteStatus(
   if (siteError) throw siteError
 
   return milestone
+}
+
+export async function bulkUpdateMilestones(
+  siteIds: string[],
+  milestoneType: MilestoneType,
+  status: MilestoneStatus,
+  date: string | null
+): Promise<void> {
+  const supabase = await createClient()
+
+  // Update milestones for all sites
+  for (const siteId of siteIds) {
+    // Find the milestone for this site and type
+    const { data: milestone, error: findError } = await supabase
+      .from('site_activation_milestones')
+      .select('id')
+      .eq('site_id', siteId)
+      .eq('milestone_type', milestoneType)
+      .single()
+
+    if (findError) continue // Skip if milestone not found
+
+    const updateData: UpdateMilestoneInput = {
+      status,
+      actual_date: status === 'completed' ? (date || new Date().toISOString().split('T')[0]) : null,
+    }
+
+    // Update the milestone and site status
+    await updateMilestoneAndSiteStatus(milestone.id, siteId, updateData)
+  }
 }

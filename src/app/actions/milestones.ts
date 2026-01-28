@@ -1,8 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { updateMilestoneAndSiteStatus } from '@/lib/queries/milestones'
-import type { UpdateMilestoneInput } from '@/types'
+import { updateMilestoneAndSiteStatus, bulkUpdateMilestones } from '@/lib/queries/milestones'
+import type { UpdateMilestoneInput, MilestoneType, MilestoneStatus } from '@/types'
 
 export async function updateMilestoneAction(
   milestoneId: string,
@@ -15,4 +15,18 @@ export async function updateMilestoneAction(
   revalidatePath(`/studies/${studyId}`)
   revalidatePath('/activation')
   return milestone
+}
+
+export async function bulkUpdateMilestonesAction(
+  siteIds: string[],
+  milestoneType: MilestoneType,
+  status: MilestoneStatus,
+  date: string | null
+) {
+  await bulkUpdateMilestones(siteIds, milestoneType, status, date)
+  revalidatePath('/activation')
+  // Revalidate all affected site pages
+  for (const siteId of siteIds) {
+    revalidatePath(`/sites/${siteId}`)
+  }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,7 +12,15 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createSiteAction } from '@/app/actions/sites'
+import { COUNTRIES } from '@/lib/constants'
 
 interface CreateSiteDialogProps {
   studyId: string
@@ -26,19 +35,25 @@ export default function CreateSiteDialog({ studyId }: CreateSiteDialogProps) {
     setLoading(true)
 
     const formData = new FormData(e.currentTarget)
+    const siteName = formData.get('name') as string
 
-    await createSiteAction({
-      study_id: studyId,
-      site_number: formData.get('site_number') as string,
-      name: formData.get('name') as string,
-      principal_investigator: formData.get('principal_investigator') as string,
-      country: formData.get('country') as string,
-      region: formData.get('region') as string || undefined,
-      target_enrollment: parseInt(formData.get('target_enrollment') as string) || 0,
-    })
-
-    setLoading(false)
-    setOpen(false)
+    try {
+      await createSiteAction({
+        study_id: studyId,
+        site_number: formData.get('site_number') as string,
+        name: siteName,
+        principal_investigator: formData.get('principal_investigator') as string,
+        country: formData.get('country') as string,
+        region: formData.get('region') as string || undefined,
+        target_enrollment: parseInt(formData.get('target_enrollment') as string) || 0,
+      })
+      toast.success(`Site "${siteName}" added successfully`)
+      setOpen(false)
+    } catch {
+      toast.error('Failed to add site. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -70,7 +85,19 @@ export default function CreateSiteDialog({ studyId }: CreateSiteDialogProps) {
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="country">Country</Label>
-              <Input id="country" name="country" required />
+              <Select name="country" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="region">Region</Label>

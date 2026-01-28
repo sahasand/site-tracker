@@ -91,6 +91,17 @@ export interface CreateSiteInput {
   target_enrollment: number
 }
 
+export interface UpdateSiteInput {
+  site_number?: string
+  name?: string
+  principal_investigator?: string
+  country?: string
+  region?: string
+  target_enrollment?: number
+  current_enrollment?: number
+  status?: SiteStatus
+}
+
 export interface UpdateMilestoneInput {
   status: MilestoneStatus
   planned_date?: string | null

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Site, CreateSiteInput, SiteActivationMilestone } from '@/types'
+import type { Site, CreateSiteInput, UpdateSiteInput, SiteActivationMilestone } from '@/types'
 
 export async function getSitesByStudy(studyId: string): Promise<Site[]> {
   const supabase = await createClient()
@@ -67,7 +67,7 @@ export async function createSite(input: CreateSiteInput): Promise<Site> {
   return data
 }
 
-export async function updateSite(id: string, input: Partial<CreateSiteInput>): Promise<Site> {
+export async function updateSite(id: string, input: UpdateSiteInput): Promise<Site> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('sites')
@@ -88,6 +88,23 @@ export async function deleteSite(id: string): Promise<void> {
     .eq('id', id)
 
   if (error) throw error
+}
+
+export async function bulkCreateSites(inputs: CreateSiteInput[]): Promise<Site[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('sites')
+    .insert(
+      inputs.map(input => ({
+        ...input,
+        status: 'planned',
+        current_enrollment: 0,
+      }))
+    )
+    .select()
+
+  if (error) throw error
+  return data
 }
 
 export async function getAllSitesWithMilestones(): Promise<Array<Site & { milestones: SiteActivationMilestone[] }>> {

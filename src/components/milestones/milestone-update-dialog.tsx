@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -45,17 +46,22 @@ export default function MilestoneUpdateDialog({
     const formData = new FormData(e.currentTarget)
     const newStatus = formData.get('status') as MilestoneStatus
 
-    await updateMilestoneAction(milestone.id, siteId, studyId, {
-      status: newStatus,
-      planned_date: formData.get('planned_date') as string || null,
-      actual_date: newStatus === 'completed'
-        ? (formData.get('actual_date') as string || new Date().toISOString().split('T')[0])
-        : null,
-      notes: formData.get('notes') as string || null,
-    })
-
-    setLoading(false)
-    setOpen(false)
+    try {
+      await updateMilestoneAction(milestone.id, siteId, studyId, {
+        status: newStatus,
+        planned_date: formData.get('planned_date') as string || null,
+        actual_date: newStatus === 'completed'
+          ? (formData.get('actual_date') as string || new Date().toISOString().split('T')[0])
+          : null,
+        notes: formData.get('notes') as string || null,
+      })
+      toast.success(`${MILESTONE_LABELS[milestone.milestone_type]} updated`)
+      setOpen(false)
+    } catch {
+      toast.error('Failed to update milestone. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

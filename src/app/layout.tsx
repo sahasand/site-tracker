@@ -1,14 +1,12 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Toaster } from 'sonner'
 import './globals.css'
 import Providers from './providers'
 import Header from '@/components/layout/header'
 
-const inter = Inter({ subsets: ['latin'] })
-
 export const metadata: Metadata = {
-  title: 'Site Tracker',
-  description: 'Clinical trial site tracking dashboard',
+  title: 'Site Tracker | Clinical Trial Management',
+  description: 'Professional clinical trial site tracking and activation management dashboard',
 }
 
 export default function RootLayout({
@@ -18,14 +16,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <Providers>
-          <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen page-bg">
             <Header />
-            <main className="container mx-auto px-4 py-8">
+            <main className="container mx-auto px-6 py-8">
               {children}
             </main>
           </div>
+          <Toaster position="bottom-right" richColors closeButton />
         </Providers>
       </body>
     </html>
