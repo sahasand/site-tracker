@@ -224,6 +224,26 @@
     animation: pulse-subtle 2s ease-in-out infinite;
   }
 
+  /* Stage duration bar animation */
+  @keyframes bar-grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .stage-bar {
+    transform-origin: left center;
+    animation: bar-grow 600ms ease-out forwards;
+  }
+
+  .stage-bar-delay-1 { animation-delay: 0ms; }
+  .stage-bar-delay-2 { animation-delay: 80ms; }
+  .stage-bar-delay-3 { animation-delay: 160ms; }
+  .stage-bar-delay-4 { animation-delay: 240ms; }
+
   /* Drag overlay styles */
   .drag-overlay-card {
     @apply cursor-grabbing;

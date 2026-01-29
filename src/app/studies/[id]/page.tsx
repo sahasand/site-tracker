@@ -2,13 +2,13 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getStudy } from '@/lib/queries/studies'
 import { getSitesByStudy } from '@/lib/queries/sites'
-import { calculateCycleTimes } from '@/lib/queries/analytics'
+import { calculateCycleTimes, calculateStageDurations, getStuckSitesForStudy } from '@/lib/queries/analytics'
 import SiteTableWithFilter from '@/components/sites/site-table-with-filter'
 import CreateSiteDialog from '@/components/sites/create-site-dialog'
 import ImportCSVDialog from '@/components/sites/import-csv-dialog'
 import EditStudyDialog from '@/components/studies/edit-study-dialog'
-import EnrollmentChart from '@/components/studies/enrollment-chart'
-import CycleTimeChart from '@/components/studies/cycle-time-chart'
+import StudyPulse from '@/components/studies/study-pulse'
+import StageDurationChart from '@/components/studies/stage-duration-chart'
 
 interface StudyDetailPageProps {
   params: Promise<{ id: string }>
@@ -22,17 +22,12 @@ export default async function StudyDetailPage({ params }: StudyDetailPageProps) 
     notFound()
   }
 
-  const [sites, cycleTimes] = await Promise.all([
+  const [sites, cycleTimes, stageDurations, stuckSites] = await Promise.all([
     getSitesByStudy(id),
     calculateCycleTimes(id),
+    calculateStageDurations(id),
+    getStuckSitesForStudy(id),
   ])
-
-  const activeSites = sites.filter(s => s.status === 'active').length
-  const activatingSites = sites.filter(s => s.status === 'activating').length
-  const totalEnrollment = sites.reduce((sum, s) => sum + s.current_enrollment, 0)
-  const enrollmentPercent = study.target_enrollment > 0
-    ? Math.round((totalEnrollment / study.target_enrollment) * 100)
-    : 0
 
   return (
     <div className="space-y-8">
@@ -77,97 +72,21 @@ export default async function StudyDetailPage({ params }: StudyDetailPageProps) 
         <EditStudyDialog study={study} siteCount={sites.length} />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-              <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-              </svg>
-            </div>
+      {/* Study Pulse */}
+      <StudyPulse sites={sites} cycleTimes={cycleTimes} stuckSites={stuckSites} />
+
+      {/* Stage Duration Chart */}
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Total Sites</p>
-              <p className="text-2xl font-semibold text-slate-800">{sites.length}</p>
+              <h2 className="text-base font-semibold text-slate-800">Stage Duration</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Average days per activation stage</p>
             </div>
           </div>
         </div>
-
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Active</p>
-              <p className="text-2xl font-semibold text-emerald-600">{activeSites}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-              <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Activating</p>
-              <p className="text-2xl font-semibold text-amber-600">{activatingSites}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center">
-              <svg className="w-5 h-5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Enrollment</p>
-              <div className="flex items-baseline gap-1">
-                <p className="text-2xl font-semibold text-violet-600">{totalEnrollment}</p>
-                <span className="text-sm text-slate-400">/ {study.target_enrollment}</span>
-              </div>
-              {study.target_enrollment > 0 && (
-                <div className="mt-1.5 w-full bg-slate-200 rounded-full h-1.5">
-                  <div
-                    className="bg-violet-500 h-1.5 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(enrollmentPercent, 100)}%` }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Section */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="glass-card rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white">
-            <h2 className="text-base font-semibold text-slate-800">Enrollment Progress</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Cumulative enrollment across sites</p>
-          </div>
-          <div className="p-5">
-            <EnrollmentChart sites={sites} targetEnrollment={study.target_enrollment} />
-          </div>
-        </div>
-
-        <div className="glass-card rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white">
-            <h2 className="text-base font-semibold text-slate-800">Milestone Cycle Times</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Average variance from planned dates</p>
-          </div>
-          <div className="p-5">
-            <CycleTimeChart cycleTimes={cycleTimes} />
-          </div>
+        <div className="p-5">
+          <StageDurationChart stageDurations={stageDurations} />
         </div>
       </div>
 

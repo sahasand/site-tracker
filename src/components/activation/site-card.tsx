@@ -3,6 +3,7 @@
 import { useDraggable } from '@dnd-kit/core'
 import Link from 'next/link'
 import type { Site, SiteActivationMilestone } from '@/types'
+import { stageConfig, stageOrder } from './kanban-board'
 
 interface SiteCardProps {
   site: Site & { milestones: SiteActivationMilestone[] }
@@ -33,9 +34,15 @@ function SiteCardContent({
     ))
   )
 
-  const completedCount = site.milestones.filter(m => m.status === 'completed').length
-  const totalCount = site.milestones.length
-  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
+  // Count completed stages (a stage is complete when all its milestones are completed)
+  const completedStages = stageOrder.filter(stage => {
+    const stageMilestones = site.milestones.filter(m =>
+      stageConfig[stage].milestones.includes(m.milestone_type)
+    )
+    return stageMilestones.length > 0 && stageMilestones.every(m => m.status === 'completed')
+  }).length
+  const totalStages = stageOrder.length
+  const progress = totalStages > 0 ? (completedStages / totalStages) * 100 : 0
 
   const daysInStage = currentMilestone?.updated_at
     ? Math.floor((Date.now() - new Date(currentMilestone.updated_at).getTime()) / (1000 * 60 * 60 * 24))
@@ -94,7 +101,7 @@ function SiteCardContent({
       </div>
       <div className="flex items-center justify-between mt-1">
         <span className="text-[10px] text-slate-400 font-medium">
-          {completedCount}/{totalCount} milestones
+          {completedStages}/{totalStages} stages
         </span>
         {progress === 100 && (
           <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">

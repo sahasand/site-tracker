@@ -131,3 +131,25 @@ export const MILESTONE_LABELS: Record<MilestoneType, string> = {
   edc_training_complete: 'EDC Training Complete',
   site_activated: 'Site Activated',
 }
+
+// Stage duration types (for activation chart)
+export type StageType = 'regulatory' | 'contracts' | 'site_initiation' | 'go_live'
+
+export interface StageDuration {
+  stage: StageType
+  label: string
+  color: string
+  avgDays: number | null
+  minDays: number | null
+  maxDays: number | null
+  completedCount: number
+}
+
+export const STAGE_CONFIG: Record<StageType, { label: string; color: string; endMilestone: MilestoneType }> = {
+  regulatory: { label: 'Regulatory', color: '#3b82f6', endMilestone: 'regulatory_approved' },
+  contracts: { label: 'Contracts', color: '#8b5cf6', endMilestone: 'contract_executed' },
+  site_initiation: { label: 'Site Initiation', color: '#14b8a6', endMilestone: 'siv_completed' },
+  go_live: { label: 'Go-Live', color: '#10b981', endMilestone: 'site_activated' },
+}
+
+export const STAGE_ORDER: StageType[] = ['regulatory', 'contracts', 'site_initiation', 'go_live']
