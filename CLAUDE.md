@@ -67,7 +67,7 @@ This is a clinical trial site tracking dashboard built with Next.js 14 App Route
 - `src/types/` - Domain types and constants (Study, Site, Milestone enums)
 - `src/components/ui/` - Shadcn primitives (includes Popover for milestone stepper)
 - `src/components/activation/` - Kanban board with drag-and-drop (single DndContext pattern)
-- `src/components/portfolio/` - Portfolio page components (summary header, study cards, sparklines)
+- `src/components/portfolio/` - Portfolio page components (pipeline track, study progress cards, sparklines)
 - `src/components/studies/` - Study cards, charts, dialogs, StudyPulse
 - `src/components/sites/` - Site table, dialogs, CSV import
 - `src/components/milestones/` - MilestoneStepper (horizontal progress UI)
@@ -99,17 +99,26 @@ Site cards show "x/5 stages" (not milestones) to match the visible kanban column
 - Milestone status updates with date tracking
 - Toast notifications for all actions (sonner)
 
-### Portfolio Page (`/portfolio`)
+### Portfolio Page (`/portfolio`) - Landing Page
 - **Cross-study dashboard** for Ops Managers and Executives
-- **Summary Header**: Total sites, active, activating, at-risk counts with velocity sparkline
-- **Attention Rail**: Horizontally scrollable queue of sites stuck >14 days
-- **Study Pulse Grid**: Cards showing each study's health at a glance
-  - Progress dots (filled = active sites)
-  - Velocity sparkline (8-week trend)
-  - Trend arrow (up/flat/down)
+- Root URL (`/`) redirects here as the main landing page
+- **Pipeline Track Header**: Visual site-by-study pipeline showing:
+  - Each study as a horizontal track with stage markers (REG → CONT → SIV → ACTIVE)
+  - Sites as colored dots positioned at their current stage
+  - Clustered dots with count badge when multiple sites at same position
+  - Hover tooltips with site details and click-through to site page
+  - Edge-aware tooltip positioning (adjusts for left/right boundaries)
+- **Attention Rail**: Horizontally scrollable queue of sites stuck >14 days (hidden when empty)
+- **Study Progress Cards**: Cards showing each study's health at a glance
+  - Donut chart with Active/Activating/Planned breakdown and percentage
+  - Stage completion bars (Regulatory, Contracts, SIV, Active)
+  - Velocity indicator with trend arrow
   - Health-based styling (healthy/at_risk/critical)
-  - Hover reveals stage completion bars
-- Sortable by Health, Progress, Velocity, Name
+- Click-through to study detail page
+
+### Studies Page (`/studies`)
+- List of all studies with site counts
+- Create new study dialog
 - Click-through to study detail page
 
 ### Activation Pipeline (`/activation`)
@@ -178,6 +187,7 @@ Located in `src/lib/queries/portfolio.ts`:
 - `getPortfolioStudies()` - All studies with health, velocity, stage counts
 - `getPortfolioAttentionItems(daysThreshold)` - Stuck sites across all studies
 - `getPortfolioSummary()` - Aggregate metrics for portfolio header
+- `getStudyPipelines()` - All studies with individual site positions for pipeline track visualization
 
 ## Adding Features
 
@@ -219,3 +229,12 @@ The Portfolio page (`src/app/portfolio/page.tsx`) demonstrates patterns for exec
 - Cards as "vital signs" with hover-reveal details
 - Stage completion calculated by checking if all milestones in a stage are completed
 - Attention rail pattern for surfacing actionable items
+
+### Pipeline Track (Site-Level Visualization)
+The Pipeline Track (`src/components/portfolio/pipeline-track.tsx`) shows individual sites across studies:
+- Groups sites by position to handle overlaps (clustering)
+- Count badge displayed when multiple sites at same stage
+- Edge-aware tooltip positioning prevents clipping at boundaries
+- Color-coded dots by stage (blue=Regulatory, violet=Contracts, teal=SIV, emerald=Active)
+- Stuck sites pulse red with animation
+- Click-through navigation to site detail pages

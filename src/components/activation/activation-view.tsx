@@ -199,8 +199,9 @@ export default function ActivationView({
       setPendingMove({ site, targetStage, milestonesToComplete: milestonesToReset, isBackward: true })
     } else {
       // Forward moves - complete milestones
+      // Use <= targetIndex to include the target stage (so dragging to Activated completes site_activated)
       const milestonesToComplete: SiteActivationMilestone[] = []
-      for (let i = currentIndex; i < targetIndex; i++) {
+      for (let i = currentIndex; i <= targetIndex; i++) {
         const stage = stageOrder[i]
         const stageMilestones = site.milestones.filter(m =>
           stageConfig[stage].milestones.includes(m.milestone_type) &&

@@ -278,4 +278,18 @@
   .dragging-source {
     @apply opacity-40 ring-2 ring-dashed ring-slate-300 bg-slate-100;
   }
+
+  /* Shimmer animation for pipeline track */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(200%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s ease-in-out infinite;
+  }
 }

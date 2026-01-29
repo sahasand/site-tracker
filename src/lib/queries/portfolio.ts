@@ -12,13 +12,16 @@ export interface PortfolioStudy {
   phase: string
   sitesActive: number
   sitesActivating: number
+  sitesPlanned: number
   sitesTotal: number
+  sitesStuck: number
   weeklyVelocity: number[]
   trend: TrendDirection
   health: HealthStatus
   stageCounts: {
     stage: 'regulatory' | 'contracts' | 'site_initiation' | 'go_live'
     completed: number
+    inProgress: number
     total: number
   }[]
 }
@@ -114,16 +117,24 @@ async function getStudyStageCounts(
   const counts: PortfolioStudy['stageCounts'] = []
 
   for (const { stage, milestone } of stages) {
-    const { count } = await supabase
+    const { count: completedCount } = await supabase
       .from('site_activation_milestones')
       .select('*, site:sites!inner(study_id)', { count: 'exact', head: true })
       .eq('milestone_type', milestone)
       .eq('status', 'completed')
       .eq('site.study_id', studyId)
 
+    const { count: inProgressCount } = await supabase
+      .from('site_activation_milestones')
+      .select('*, site:sites!inner(study_id)', { count: 'exact', head: true })
+      .eq('milestone_type', milestone)
+      .eq('status', 'in_progress')
+      .eq('site.study_id', studyId)
+
     counts.push({
       stage,
-      completed: count || 0,
+      completed: completedCount || 0,
+      inProgress: inProgressCount || 0,
       total: totalSites,
     })
   }
@@ -183,13 +194,14 @@ export async function getPortfolioStudies(): Promise<PortfolioStudy[]> {
     const sitesTotal = sites.length
     const sitesActive = sites.filter((s: { status: string }) => s.status === 'active').length
     const sitesActivating = sites.filter((s: { status: string }) => s.status === 'activating').length
+    const sitesPlanned = sites.filter((s: { status: string }) => s.status === 'planned').length
 
     if (sitesTotal === 0) continue // Skip studies with no sites
 
     const weeklyVelocity = await getStudyWeeklyVelocity(supabase, study.id)
     const trend = calculateTrend(weeklyVelocity)
-    const stuckCount = await getStudyStuckCount(supabase, study.id)
-    const health = calculateHealth(stuckCount, trend)
+    const sitesStuck = await getStudyStuckCount(supabase, study.id)
+    const health = calculateHealth(sitesStuck, trend)
     const stageCounts = await getStudyStageCounts(supabase, study.id, sitesTotal)
 
     portfolioStudies.push({
@@ -198,7 +210,9 @@ export async function getPortfolioStudies(): Promise<PortfolioStudy[]> {
       phase: study.phase,
       sitesActive,
       sitesActivating,
+      sitesPlanned,
       sitesTotal,
+      sitesStuck,
       weeklyVelocity,
       trend,
       health,
@@ -257,6 +271,147 @@ export async function getPortfolioAttentionItems(daysThreshold: number = 14): Pr
   }
 
   return items.sort((a, b) => b.daysStuck - a.daysStuck)
+}
+
+// Site pipeline types
+export interface PipelineSite {
+  id: string
+  name: string
+  siteNumber: string
+  currentStage: 'regulatory' | 'contracts' | 'siv' | 'active'
+  stageProgress: number // 0-100 within the stage
+  isStuck: boolean
+  daysInStage: number
+}
+
+export interface StudyPipeline {
+  id: string
+  name: string
+  phase: string
+  sites: PipelineSite[]
+}
+
+// Determine site's current stage based on milestones
+function determineSiteStage(milestones: { milestone_type: string; status: string; updated_at: string }[]): {
+  stage: PipelineSite['currentStage']
+  progress: number
+  daysInStage: number
+} {
+  const stageMap: Record<string, { stage: PipelineSite['currentStage']; order: number }> = {
+    regulatory_submitted: { stage: 'regulatory', order: 1 },
+    regulatory_approved: { stage: 'regulatory', order: 2 },
+    contract_sent: { stage: 'contracts', order: 3 },
+    contract_executed: { stage: 'contracts', order: 4 },
+    siv_scheduled: { stage: 'siv', order: 5 },
+    siv_completed: { stage: 'siv', order: 6 },
+    edc_training_complete: { stage: 'siv', order: 7 },
+    site_activated: { stage: 'active', order: 8 },
+  }
+
+  // Find the highest completed milestone
+  let highestCompleted = 0
+  let currentInProgress: { order: number; updated_at: string } | null = null
+
+  for (const m of milestones) {
+    const info = stageMap[m.milestone_type]
+    if (!info) continue
+
+    if (m.status === 'completed' && info.order > highestCompleted) {
+      highestCompleted = info.order
+    }
+    if (m.status === 'in_progress' && (!currentInProgress || info.order < currentInProgress.order)) {
+      currentInProgress = { order: info.order, updated_at: m.updated_at }
+    }
+  }
+
+  // Determine current stage
+  let stage: PipelineSite['currentStage'] = 'regulatory'
+  let progress = 0
+
+  if (highestCompleted >= 8) {
+    stage = 'active'
+    progress = 100
+  } else if (highestCompleted >= 5) {
+    stage = 'siv'
+    progress = highestCompleted === 7 ? 66 : highestCompleted === 6 ? 33 : 0
+  } else if (highestCompleted >= 3) {
+    stage = 'contracts'
+    progress = highestCompleted === 4 ? 50 : 0
+  } else if (highestCompleted >= 1) {
+    stage = 'regulatory'
+    progress = highestCompleted === 2 ? 50 : 0
+  }
+
+  // Calculate days in current stage
+  const now = new Date()
+  let daysInStage = 0
+  if (currentInProgress) {
+    const updatedAt = new Date(currentInProgress.updated_at)
+    daysInStage = Math.floor((now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24))
+  }
+
+  return { stage, progress, daysInStage }
+}
+
+// Get all studies with individual site pipeline positions
+export async function getStudyPipelines(): Promise<StudyPipeline[]> {
+  const supabase = await createClient()
+
+  const { data: studies, error } = await supabase
+    .from('studies')
+    .select(`
+      id,
+      name,
+      phase,
+      sites(
+        id,
+        name,
+        site_number,
+        status,
+        site_activation_milestones(
+          milestone_type,
+          status,
+          updated_at
+        )
+      )
+    `)
+    .eq('status', 'active')
+    .order('name')
+
+  if (error) throw error
+
+  const pipelines: StudyPipeline[] = []
+
+  for (const study of studies) {
+    const sites = study.sites || []
+    if (sites.length === 0) continue
+
+    const pipelineSites: PipelineSite[] = []
+
+    for (const site of sites) {
+      const milestones = (site.site_activation_milestones || []) as { milestone_type: string; status: string; updated_at: string }[]
+      const { stage, progress, daysInStage } = determineSiteStage(milestones)
+
+      pipelineSites.push({
+        id: site.id,
+        name: site.name,
+        siteNumber: site.site_number,
+        currentStage: stage,
+        stageProgress: progress,
+        isStuck: daysInStage >= 14,
+        daysInStage,
+      })
+    }
+
+    pipelines.push({
+      id: study.id,
+      name: study.name,
+      phase: study.phase,
+      sites: pipelineSites,
+    })
+  }
+
+  return pipelines
 }
 
 // Get aggregate portfolio summary

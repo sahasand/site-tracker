@@ -1,19 +1,20 @@
-import { getPortfolioStudies, getPortfolioAttentionItems, getPortfolioSummary } from '@/lib/queries/portfolio'
+import { getPortfolioStudies, getPortfolioAttentionItems, getPortfolioSummary, getStudyPipelines } from '@/lib/queries/portfolio'
 import SummaryHeader from '@/components/portfolio/summary-header'
 import AttentionRail from '@/components/portfolio/attention-rail'
 import StudyPulseGrid from '@/components/portfolio/study-pulse-grid'
 
 export default async function PortfolioPage() {
-  const [studies, attentionItems, summary] = await Promise.all([
+  const [studies, attentionItems, summary, pipelines] = await Promise.all([
     getPortfolioStudies(),
     getPortfolioAttentionItems(),
     getPortfolioSummary(),
+    getStudyPipelines(),
   ])
 
   return (
     <div className="space-y-6">
       {/* Summary Header */}
-      <SummaryHeader summary={summary} />
+      <SummaryHeader summary={summary} pipelines={pipelines} />
 
       {/* Attention Rail */}
       <AttentionRail items={attentionItems} id="attention-rail" />
