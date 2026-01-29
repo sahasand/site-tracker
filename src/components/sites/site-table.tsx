@@ -149,7 +149,7 @@ export default function SiteTable({ sites }: SiteTableProps) {
       </TableHeader>
       <TableBody>
         {sortedSites.map((site) => (
-          <TableRow key={site.id}>
+          <TableRow key={site.id} data-site-id={site.id} className="transition-colors duration-500">
             <TableCell>
               <Link
                 href={`/sites/${site.id}`}

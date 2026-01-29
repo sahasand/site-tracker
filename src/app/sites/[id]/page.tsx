@@ -4,7 +4,7 @@ import { getSiteWithMilestones } from '@/lib/queries/sites'
 import { getStudy } from '@/lib/queries/studies'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import MilestoneTracker from '@/components/milestones/milestone-tracker'
+import ActivationTimeline from '@/components/milestones/activation-timeline'
 import EditSiteDialog from '@/components/sites/edit-site-dialog'
 
 interface SiteDetailPageProps {
@@ -103,10 +103,11 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Activation Milestones</CardTitle>
+          <CardTitle>Activation Record</CardTitle>
+          <p className="text-sm text-slate-500 mt-1">Official timeline with dates and variance tracking</p>
         </CardHeader>
         <CardContent>
-          <MilestoneTracker
+          <ActivationTimeline
             milestones={milestones}
             siteId={site.id}
             studyId={site.study_id}
