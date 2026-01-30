@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Deployment
+
+**Live URL**: https://site-tracker-sahasands-projects.vercel.app
+
+**Hosting**: Vercel (connected via GitHub integration)
+- Push to `master` branch auto-deploys to production
+- Environment variables configured in Vercel dashboard
+
 ## Getting Started
 
 ### Prerequisites
