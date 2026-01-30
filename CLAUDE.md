@@ -233,8 +233,39 @@ The Portfolio page (`src/app/portfolio/page.tsx`) demonstrates patterns for exec
 ### Pipeline Track (Site-Level Visualization)
 The Pipeline Track (`src/components/portfolio/pipeline-track.tsx`) shows individual sites across studies:
 - Groups sites by position to handle overlaps (clustering)
-- Count badge displayed when multiple sites at same stage
+- **Color-matched count badges** - badge uses dot's color (not dark slate) for visual unity
 - Edge-aware tooltip positioning prevents clipping at boundaries
 - Color-coded dots by stage (blue=Regulatory, violet=Contracts, teal=SIV, emerald=Active)
+- Glow effects on hover with radial gradients
 - Stuck sites pulse red with animation
 - Click-through navigation to site detail pages
+
+## Design System
+
+### Typography
+- **Fraunces** - Serif display font for headings
+- **DM Sans** - Sans-serif body font with OpenType features enabled
+- **JetBrains Mono** - Monospace for data/numbers (`.number-highlight` utility class)
+
+### Color Tokens
+Stage colors defined as CSS variables in `globals.css`:
+- `--stage-regulatory`: Blue (#3b82f6)
+- `--stage-contracts`: Violet (#8b5cf6)
+- `--stage-siv`: Teal (#14b8a6)
+- `--stage-activated`: Emerald (#10b981)
+
+Health status colors:
+- Healthy: Emerald
+- At Risk: Amber
+- Critical: Red
+
+### Premium UI Patterns
+- **Elevated cards** (`.card-elevated`) - Layered shadows for depth
+- **Gradient separators** (`.separator-gradient`) - Subtle horizontal dividers
+- **Glow effects** - Radial gradients on hover for interactive elements
+- **Staggered animations** - Mount animations with index-based delays
+
+### Study Progress Card Metrics
+- **Donut center**: Shows activation % (active sites / total) with subtle "ACTIVE" label
+- **Bottom stat**: Shows milestone progress (completed / total milestones)
+- **Health badge**: On Track / At Risk / Critical based on stuck sites

@@ -9,10 +9,10 @@ interface PipelineTrackProps {
 }
 
 const STAGES = [
-  { key: 'regulatory', label: 'REG', position: 0 },
-  { key: 'contracts', label: 'CONT', position: 33 },
-  { key: 'siv', label: 'SIV', position: 66 },
-  { key: 'active', label: 'ACTIVE', position: 100 },
+  { key: 'regulatory', label: 'REG', position: 0, color: '#3b82f6' },
+  { key: 'contracts', label: 'CONT', position: 33, color: '#8b5cf6' },
+  { key: 'siv', label: 'SIV', position: 66, color: '#14b8a6' },
+  { key: 'active', label: 'ACTIVE', position: 100, color: '#10b981' },
 ] as const
 
 function getDotPosition(site: PipelineSite): number {
@@ -35,6 +35,14 @@ function getDotColor(site: PipelineSite): string {
   if (site.currentStage === 'siv') return '#14b8a6'
   if (site.currentStage === 'contracts') return '#8b5cf6'
   return '#3b82f6'
+}
+
+function getGlowColor(site: PipelineSite): string {
+  if (site.isStuck) return 'rgba(239, 68, 68, 0.4)'
+  if (site.currentStage === 'active') return 'rgba(16, 185, 129, 0.4)'
+  if (site.currentStage === 'siv') return 'rgba(20, 184, 166, 0.4)'
+  if (site.currentStage === 'contracts') return 'rgba(139, 92, 246, 0.4)'
+  return 'rgba(59, 130, 246, 0.4)'
 }
 
 interface SiteCluster {
@@ -62,9 +70,8 @@ function SiteClusterDot({ cluster }: { cluster: SiteCluster }) {
   const isMultiple = sites.length > 1
   const primarySite = sites[0]
   const primaryColor = getDotColor(primarySite)
+  const glowColor = getGlowColor(primarySite)
   const hasStuck = sites.some(s => s.isStuck)
-
-  const dotSize = isMultiple ? 'w-4 h-4' : 'w-3 h-3'
 
   return (
     <div
@@ -77,45 +84,82 @@ function SiteClusterDot({ cluster }: { cluster: SiteCluster }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Outer ring for multiple sites */}
-      {isMultiple && (
-        <div
-          className="absolute inset-0 rounded-full -m-1"
-          style={{
-            border: `2px solid ${primaryColor}`,
-            opacity: 0.4,
-          }}
-        />
-      )}
+      {/* Outer glow ring */}
+      <div
+        className={`absolute inset-0 rounded-full transition-all duration-300 ${
+          isHovered ? 'scale-[2.5] opacity-100' : 'scale-150 opacity-0'
+        }`}
+        style={{
+          background: `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
+          width: '16px',
+          height: '16px',
+          marginLeft: '-4px',
+          marginTop: '-4px',
+        }}
+      />
 
-      {/* Main dot */}
+      {/* Main dot with premium styling */}
       {isMultiple ? (
         <div
-          className={`relative ${dotSize} rounded-full cursor-pointer transition-transform duration-150 ${
+          className={`relative cursor-pointer transition-all duration-200 ${
             isHovered ? 'scale-125' : 'scale-100'
-          } ${hasStuck ? 'animate-pulse' : ''}`}
-          style={{
-            backgroundColor: primaryColor,
-            boxShadow: `0 0 6px ${primaryColor}`,
-          }}
+          }`}
+          style={{ width: '18px', height: '18px' }}
         >
-          {/* Count badge */}
-          <span
-            className="absolute -top-2.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-slate-700 text-white text-[10px] font-semibold flex items-center justify-center"
-            style={{ zIndex: 20 }}
+          {/* Stacked appearance for multiple sites */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '14px',
+              height: '14px',
+              backgroundColor: primaryColor,
+              boxShadow: `
+                0 1px 2px rgba(0,0,0,0.1),
+                0 2px 8px ${glowColor}
+              `,
+              top: '2px',
+              left: '2px',
+            }}
+          />
+          {/* Count badge - color matched */}
+          <div
+            className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 rounded-full flex items-center justify-center border-2 border-white"
+            style={{
+              backgroundColor: primaryColor,
+              boxShadow: `0 2px 6px ${glowColor}, 0 1px 2px rgba(0,0,0,0.1)`,
+              zIndex: 20,
+            }}
           >
-            {sites.length}
-          </span>
+            <span className="text-[10px] font-bold text-white number-highlight drop-shadow-sm">
+              {sites.length}
+            </span>
+          </div>
+
+          {/* Stuck indicator ring */}
+          {hasStuck && (
+            <div
+              className="absolute inset-0 rounded-full animate-ping"
+              style={{
+                backgroundColor: 'transparent',
+                border: '2px solid #ef4444',
+                opacity: 0.6,
+              }}
+            />
+          )}
         </div>
       ) : (
         <Link href={`/sites/${primarySite.id}`}>
           <div
-            className={`${dotSize} rounded-full cursor-pointer transition-transform duration-150 ${
+            className={`rounded-full cursor-pointer transition-all duration-200 ${
               isHovered ? 'scale-150' : 'scale-100'
             } ${hasStuck ? 'animate-pulse' : ''}`}
             style={{
+              width: '12px',
+              height: '12px',
               backgroundColor: primaryColor,
-              boxShadow: isHovered ? `0 0 10px ${primaryColor}` : `0 0 4px ${primaryColor}`,
+              boxShadow: isHovered
+                ? `0 0 0 3px ${primaryColor}20, 0 2px 12px ${glowColor}`
+                : `0 1px 3px rgba(0,0,0,0.12), 0 1px 4px ${glowColor}`,
             }}
           />
         </Link>
@@ -127,9 +171,8 @@ function SiteClusterDot({ cluster }: { cluster: SiteCluster }) {
           className="absolute pointer-events-auto"
           style={{
             bottom: '100%',
-            marginBottom: '12px',
+            marginBottom: '16px',
             zIndex: 200,
-            // Adjust horizontal position based on where dot is on track
             ...(position <= 15
               ? { left: 0 }
               : position >= 85
@@ -137,38 +180,65 @@ function SiteClusterDot({ cluster }: { cluster: SiteCluster }) {
               : { left: '50%', transform: 'translateX(-50%)' }),
           }}
         >
-          <div className="bg-slate-900 text-white px-3 py-2 rounded-lg shadow-xl text-xs whitespace-nowrap min-w-[140px]">
-            {sites.map((site, i) => (
-              <Link
-                key={site.id}
-                href={`/sites/${site.id}`}
-                className={`block hover:bg-slate-700 -mx-2 px-2 py-1.5 rounded transition-colors ${
-                  i > 0 ? 'mt-1 pt-1.5 border-t border-slate-700' : ''
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: getDotColor(site) }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate max-w-[160px]">{site.name}</p>
-                    <p className="text-slate-400 text-[10px]">{site.siteNumber}</p>
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{
+              backgroundColor: '#0f172a',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
+              minWidth: '180px',
+            }}
+          >
+            {/* Tooltip header */}
+            <div className="px-3 py-2 border-b border-white/10">
+              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+                {sites.length === 1 ? 'Site' : `${sites.length} Sites`}
+              </p>
+            </div>
+
+            {/* Site list */}
+            <div className="py-1">
+              {sites.map((site) => (
+                <Link
+                  key={site.id}
+                  href={`/sites/${site.id}`}
+                  className="block hover:bg-white/10 transition-colors"
+                >
+                  <div className="px-3 py-2">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{
+                          backgroundColor: getDotColor(site),
+                          boxShadow: `0 0 6px ${getGlowColor(site)}`,
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate max-w-[140px]">
+                          {site.name}
+                        </p>
+                        <p className="text-[11px] text-white/40 font-medium">
+                          {site.siteNumber}
+                        </p>
+                      </div>
+                      {site.daysInStage > 0 && (
+                        <div
+                          className={`text-[11px] font-bold number-highlight px-1.5 py-0.5 rounded ${
+                            site.isStuck
+                              ? 'bg-red-500/20 text-red-400'
+                              : 'bg-white/10 text-white/60'
+                          }`}
+                        >
+                          {site.daysInStage}d
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {site.daysInStage > 0 && (
-                    <span
-                      className={`text-[10px] flex-shrink-0 ${
-                        site.isStuck ? 'text-red-400 font-medium' : 'text-slate-400'
-                      }`}
-                    >
-                      {site.daysInStage}d
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
-          {/* Arrow - also adjust position */}
+
+          {/* Arrow */}
           <div
             className="absolute top-full"
             style={{
@@ -179,7 +249,14 @@ function SiteClusterDot({ cluster }: { cluster: SiteCluster }) {
                 : { left: '50%', transform: 'translateX(-50%)' }),
             }}
           >
-            <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-slate-900" />
+            <div
+              className="w-0 h-0"
+              style={{
+                borderLeft: '8px solid transparent',
+                borderRight: '8px solid transparent',
+                borderTop: '8px solid #0f172a',
+              }}
+            />
           </div>
         </div>
       )}
@@ -187,28 +264,75 @@ function SiteClusterDot({ cluster }: { cluster: SiteCluster }) {
   )
 }
 
-function StudyTrack({ pipeline, isLast }: { pipeline: StudyPipeline; isLast: boolean }) {
+function StudyTrack({ pipeline, isLast, index }: { pipeline: StudyPipeline; isLast: boolean; index: number }) {
   const clusters = groupSitesByPosition(pipeline.sites)
+  const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <div className={`relative ${!isLast ? 'pb-4' : ''}`}>
-      {/* Study label */}
-      <div className="flex items-center gap-2 mb-1.5">
+    <div
+      className={`relative group ${!isLast ? 'pb-5' : ''}`}
+      style={{
+        animationDelay: `${index * 80}ms`,
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Study label row */}
+      <div className="flex items-center gap-3 mb-2.5 px-6">
         <Link
           href={`/studies/${pipeline.id}`}
-          className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors truncate max-w-[140px]"
+          className={`text-sm font-semibold transition-colors truncate max-w-[180px] ${
+            isHovered ? 'text-slate-900' : 'text-slate-600'
+          }`}
         >
           {pipeline.name}
         </Link>
-        <span className="text-[10px] text-slate-400 font-medium">
-          {pipeline.sites.length} {pipeline.sites.length === 1 ? 'site' : 'sites'}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <div className="w-1 h-1 rounded-full bg-slate-300" />
+          <span className="text-xs font-medium text-slate-400 number-highlight">
+            {pipeline.sites.length}
+          </span>
+          <span className="text-xs text-slate-400">
+            {pipeline.sites.length === 1 ? 'site' : 'sites'}
+          </span>
+        </div>
+
+        {/* Progress indicator */}
+        <div className="flex-1" />
+        <div className="flex items-center gap-2">
+          <div className="flex -space-x-1">
+            {pipeline.sites.slice(0, 4).map((site, i) => (
+              <div
+                key={site.id}
+                className="w-2 h-2 rounded-full border border-white"
+                style={{
+                  backgroundColor: getDotColor(site),
+                  zIndex: 4 - i,
+                }}
+              />
+            ))}
+            {pipeline.sites.length > 4 && (
+              <div className="w-2 h-2 rounded-full bg-slate-200 border border-white text-[6px] flex items-center justify-center text-slate-500 font-bold">
+                +
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Track container */}
-      <div className="relative h-6 overflow-visible">
-        {/* Track background */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-slate-200" />
+      <div className="relative h-8 mx-6 overflow-visible">
+        {/* Track background with gradient */}
+        <div
+          className={`absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 rounded-full transition-all duration-300 ${
+            isHovered ? 'h-1.5' : 'h-1'
+          }`}
+          style={{
+            background: isHovered
+              ? 'linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%)'
+              : '#e2e8f0',
+          }}
+        />
 
         {/* Stage markers */}
         {STAGES.map((stage) => (
@@ -217,7 +341,14 @@ function StudyTrack({ pipeline, isLast }: { pipeline: StudyPipeline; isLast: boo
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
             style={{ left: `${stage.position}%` }}
           >
-            <div className="w-0.5 h-2.5 bg-slate-300 rounded-full" />
+            <div
+              className={`transition-all duration-200 rounded-full ${
+                isHovered ? 'w-1.5 h-3.5' : 'w-1 h-2.5'
+              }`}
+              style={{
+                backgroundColor: isHovered ? stage.color + '40' : '#cbd5e1',
+              }}
+            />
           </div>
         ))}
 
@@ -233,30 +364,20 @@ function StudyTrack({ pipeline, isLast }: { pipeline: StudyPipeline; isLast: boo
 export default function PipelineTrack({ pipelines }: PipelineTrackProps) {
   if (pipelines.length === 0) {
     return (
-      <div className="text-center py-8 text-slate-400 text-sm">
-        No active studies with sites
+      <div className="text-center py-12 px-6">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center">
+          <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+          </svg>
+        </div>
+        <p className="text-sm text-slate-400 font-medium">No active studies with sites</p>
+        <p className="text-xs text-slate-300 mt-1">Add sites to studies to see them here</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-1 px-6">
-      {/* Stage labels header */}
-      <div className="relative h-5 mb-1">
-        {STAGES.map((stage) => (
-          <div
-            key={stage.key}
-            className="absolute text-[10px] font-medium text-slate-400 uppercase tracking-wider"
-            style={{
-              left: `${stage.position}%`,
-              transform: stage.position === 0 ? 'none' : stage.position === 100 ? 'translateX(-100%)' : 'translateX(-50%)',
-            }}
-          >
-            {stage.label}
-          </div>
-        ))}
-      </div>
-
+    <div className="space-y-1">
       {/* Study tracks */}
       <div className="space-y-0">
         {pipelines.map((pipeline, index) => (
@@ -264,10 +385,10 @@ export default function PipelineTrack({ pipelines }: PipelineTrackProps) {
             key={pipeline.id}
             pipeline={pipeline}
             isLast={index === pipelines.length - 1}
+            index={index}
           />
         ))}
       </div>
-
     </div>
   )
 }

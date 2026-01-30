@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,58 +6,64 @@
 
 @layer base {
   :root {
-    /* Clinical Precision Theme - Deep slate with teal accents */
-    --background: 210 20% 98%;
-    --foreground: 215 25% 17%;
+    /* Clinical Command Center Theme */
+    --background: 220 20% 97%;
+    --foreground: 220 25% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 17%;
+    --card-foreground: 220 25% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 17%;
+    --popover-foreground: 220 25% 10%;
 
-    --primary: 215 25% 17%;
-    --primary-foreground: 210 20% 98%;
+    --primary: 220 25% 10%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 15% 95%;
-    --secondary-foreground: 215 20% 35%;
+    --secondary: 220 15% 94%;
+    --secondary-foreground: 220 20% 35%;
 
-    --muted: 210 15% 95%;
-    --muted-foreground: 215 15% 50%;
+    --muted: 220 15% 94%;
+    --muted-foreground: 220 15% 46%;
 
-    --accent: 173 58% 39%;
+    --accent: 167 65% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 173 58% 39%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 167 65% 40%;
 
     /* Status colors */
-    --status-pending: 215 15% 70%;
+    --status-pending: 220 15% 70%;
     --status-in-progress: 38 92% 50%;
     --status-completed: 158 64% 42%;
     --status-activating: 38 92% 50%;
     --status-active: 158 64% 42%;
-    --status-planned: 215 15% 70%;
+    --status-planned: 220 15% 70%;
 
-    /* Pipeline stage colors */
-    --stage-regulatory: 215 70% 50%;
-    --stage-contracts: 262 60% 55%;
-    --stage-siv: 173 58% 39%;
-    --stage-edc: 38 92% 50%;
-    --stage-activated: 158 64% 42%;
+    /* Pipeline stage colors - refined palette */
+    --stage-regulatory: 220 75% 55%;
+    --stage-contracts: 267 55% 55%;
+    --stage-siv: 167 65% 40%;
+    --stage-edc: 38 85% 52%;
+    --stage-activated: 152 60% 42%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
 
     /* Chart colors */
-    --chart-1: 173 58% 39%;
-    --chart-2: 215 70% 50%;
-    --chart-3: 262 60% 55%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 158 64% 42%;
+    --chart-1: 167 65% 40%;
+    --chart-2: 220 75% 55%;
+    --chart-3: 267 55% 55%;
+    --chart-4: 38 85% 52%;
+    --chart-5: 152 60% 42%;
+
+    /* Portfolio-specific tokens */
+    --portfolio-bg: 220 25% 96%;
+    --portfolio-card: 0 0% 100%;
+    --portfolio-border: 220 20% 90%;
+    --portfolio-glow: 167 65% 40%;
   }
 }
 
@@ -73,12 +79,18 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', system-ui, sans-serif;
+    font-feature-settings: 'ss01' on, 'ss02' on;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Fraunces', Georgia, serif;
     font-optical-sizing: auto;
     @apply tracking-tight;
+  }
+
+  /* Monospace for data */
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
   }
 }
 
@@ -87,13 +99,37 @@
     text-wrap: balance;
   }
 
-  /* Subtle glassmorphism for cards */
+  /* Premium glassmorphism card */
   .glass-card {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20;
+    @apply bg-white/90 backdrop-blur-xl border border-white/60;
     box-shadow:
-      0 1px 3px 0 rgb(0 0 0 / 0.04),
-      0 4px 6px -1px rgb(0 0 0 / 0.03),
-      inset 0 1px 0 0 rgb(255 255 255 / 0.6);
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 1px 2px 0 rgba(0, 0, 0, 0.03),
+      0 4px 16px -2px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  }
+
+  /* Elevated card with premium shadow */
+  .card-elevated {
+    @apply bg-white rounded-2xl;
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.03),
+      0 1px 2px 0 rgba(0, 0, 0, 0.02),
+      0 4px 8px -2px rgba(0, 0, 0, 0.04),
+      0 12px 24px -4px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-elevated-hover {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .card-elevated-hover:hover {
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.04),
+      0 2px 4px 0 rgba(0, 0, 0, 0.03),
+      0 8px 16px -4px rgba(0, 0, 0, 0.08),
+      0 20px 40px -8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
   }
 
   /* Stage indicator dots */
@@ -118,12 +154,13 @@
     background: linear-gradient(135deg, currentColor 0%, transparent 60%);
   }
 
-  /* Subtle page background pattern */
+  /* Premium page background */
   .page-bg {
-    background-color: hsl(var(--background));
+    background-color: hsl(var(--portfolio-bg));
     background-image:
-      radial-gradient(at 100% 0%, hsl(173 58% 39% / 0.03) 0%, transparent 50%),
-      radial-gradient(at 0% 100%, hsl(215 70% 50% / 0.03) 0%, transparent 50%);
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(167 65% 40% / 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 100% 50%, hsl(220 75% 55% / 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 0% 80%, hsl(267 55% 55% / 0.02) 0%, transparent 50%);
   }
 
   /* Card hover lift effect */
@@ -210,6 +247,22 @@
     animation: slideIn 0.3s ease-out forwards;
   }
 
+  /* Staggered fade in */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
   /* Pulse animation for in-progress items */
   @keyframes pulse-subtle {
     0%, 100% {
@@ -222,6 +275,36 @@
 
   .animate-pulse-subtle {
     animation: pulse-subtle 2s ease-in-out infinite;
+  }
+
+  /* Premium glow pulse for attention items */
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+    }
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  /* Smooth count animation */
+  @keyframes countUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-count-up {
+    animation: countUp 0.4s ease-out forwards;
   }
 
   /* Stage duration bar animation */
@@ -291,5 +374,84 @@
 
   .animate-shimmer {
     animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Premium track shimmer */
+  @keyframes track-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .track-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+    background-size: 50% 100%;
+    animation: track-shimmer 3s ease-in-out infinite;
+  }
+
+  /* Donut chart glow */
+  @keyframes donut-glow {
+    0%, 100% {
+      filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.3));
+    }
+    50% {
+      filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.5));
+    }
+  }
+
+  .donut-glow {
+    animation: donut-glow 3s ease-in-out infinite;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(220 25% 10%) 0%, hsl(220 20% 30%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Premium separator */
+  .separator-gradient {
+    background: linear-gradient(90deg, transparent, hsl(220 15% 85%), transparent);
+  }
+
+  /* Dot connector animation */
+  @keyframes dot-travel {
+    0% {
+      transform: translateX(0) scale(0);
+      opacity: 0;
+    }
+    10% {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
+    90% {
+      transform: translateX(calc(100% - 8px)) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(calc(100% - 8px)) scale(0);
+      opacity: 0;
+    }
+  }
+
+  .animate-dot-travel {
+    animation: dot-travel 4s ease-in-out infinite;
+  }
+
+  /* Number highlight */
+  .number-highlight {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
 }
